@@ -7,7 +7,7 @@
       <div class="flex items-center gap-4">
         <button
           @click="store.toggleSidebar()"
-          class="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
         >
           <component :is="sidebarOpen ? X : Menu" :size="20" />
         </button>

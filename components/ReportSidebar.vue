@@ -1,10 +1,9 @@
 <template>
   <aside :class="[
-    'fixed left-0 h-[calc(100vh-4rem)] border-r transition-all duration-300 z-40 overflow-y-auto',
-    darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200',
-    sidebarOpen ? 'w-80 translate-x-0' : 'w-80 -translate-x-full lg:translate-x-0',
-    'lg:sticky lg:top-16'
-  ]">
+  'fixed left-0 top-16 h-[calc(100vh-4rem)] border-r transition-transform duration-300 z-40 overflow-y-auto w-80',
+  darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200',
+  sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+]">
     <div class="p-6">
       <!-- Search -->
       <div class="relative mb-6">
