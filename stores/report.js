@@ -114,6 +114,32 @@ export const useReportStore = defineStore('report', {
                 items: block.listItems || []
               }
             }
+            if (block.Type === 'stats') {
+              return {
+                type: 'stats',
+                data: block.statsData || []
+              }
+            }
+            if (block.Type === 'image') {
+              return {
+                type: 'image',
+                url: block.imageUrl,
+                caption: block.imageCaption
+              }
+            }
+            if (block.Type === 'quote') {
+              return {
+                type: 'quote',
+                text: block.quoteText,
+                author: block.quoteAuthor
+              }
+            }
+            if (block.Type === 'table') {
+              return {
+                type: 'table',
+                data: block.tableData
+              }
+            }
             return null
           }).filter(Boolean)
           

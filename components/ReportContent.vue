@@ -89,6 +89,87 @@
             <span :class="['text-lg', darkMode ? 'text-gray-300' : 'text-gray-700']">{{ item }}</span>
           </li>
         </ul>
+
+        <!-- Stats Block -->
+        <div 
+          v-else-if="block.type === 'stats'" 
+          :class="[
+            'grid grid-cols-2 md:grid-cols-3 gap-4 p-6 rounded-xl',
+            darkMode ? 'bg-gray-800' : 'bg-white shadow-sm'
+          ]"
+        >
+          <div v-for="(stat, i) in block.data" :key="i" class="text-center">
+            <div class="text-3xl font-bold text-blue-600 mb-1">{{ stat.value }}</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">{{ stat.label }}</div>
+          </div>
+        </div>
+
+        <!-- Image Block -->
+        <figure v-else-if="block.type === 'image'" class="space-y-2">
+          <img 
+            :src="block.url" 
+            :alt="block.caption || 'Report image'"
+            class="w-full rounded-xl shadow-lg"
+          />
+          <figcaption 
+            v-if="block.caption" 
+            class="text-sm text-center text-gray-600 dark:text-gray-400 italic"
+          >
+            {{ block.caption }}
+          </figcaption>
+        </figure>
+
+        <!-- Quote Block -->
+        <blockquote 
+          v-else-if="block.type === 'quote'"
+          :class="[
+            'border-l-4 border-blue-500 pl-6 py-4 my-6 italic',
+            darkMode ? 'text-gray-300' : 'text-gray-700'
+          ]"
+        >
+          <p class="text-xl mb-2">{{ block.text }}</p>
+          <footer v-if="block.author" class="text-sm not-italic text-gray-500 dark:text-gray-400">
+            — {{ block.author }}
+          </footer>
+        </blockquote>
+
+        <!-- Table Block -->
+        <div v-else-if="block.type === 'table'" class="overflow-x-auto">
+          <table :class="[
+            'w-full text-sm',
+            darkMode ? 'text-gray-300' : 'text-gray-700'
+          ]">
+            <thead :class="darkMode ? 'bg-gray-800' : 'bg-gray-50'">
+              <tr>
+                <th 
+                  v-for="(header, i) in block.data.headers" 
+                  :key="i"
+                  class="px-4 py-3 text-left font-semibold"
+                >
+                  {{ header }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr 
+                v-for="(row, i) in block.data.rows" 
+                :key="i"
+                :class="[
+                  'border-t',
+                  darkMode ? 'border-gray-700' : 'border-gray-200'
+                ]"
+              >
+                <td 
+                  v-for="(cell, j) in row" 
+                  :key="j"
+                  class="px-4 py-3"
+                >
+                  {{ cell }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </template>
     </div>
 
