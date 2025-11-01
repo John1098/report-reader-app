@@ -86,7 +86,7 @@ const handleLogin = async () => {
     localStorage.setItem('user', JSON.stringify(response.user))
     
     // Redirect to home
-    navigateTo('/')
+    navigateTo('/reports')
   } catch (e) {
     error.value = e.data?.message || 'Login failed'
   } finally {
