@@ -125,7 +125,7 @@
                 </div>
               </div>
 
-              <div class="mt-4">
+              <div class="mt-4 flex items-center justify-between">
                 <span 
                   :class="[
                     'inline-block px-2 py-1 rounded text-xs font-medium',
@@ -136,6 +136,23 @@
                 >
                   {{ report.publicationStatus || 'draft' }}
                 </span>
+                
+                <div class="flex items-center gap-2">
+                  <button
+                    @click.stop="editReport(report)"
+                    class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                    title="Edit report"
+                  >
+                    <Pencil :size="16" class="text-gray-600 dark:text-gray-400" />
+                  </button>
+                  <button
+                    @click.stop="confirmDelete(report)"
+                    class="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                    title="Delete report"
+                  >
+                    <Trash2 :size="16" class="text-red-600 dark:text-red-400" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -143,11 +160,61 @@
       </div>
     </main>
   </div>
+  <!-- Delete Confirmation Modal -->
+  <Transition
+    enter-active-class="transition ease-out duration-200"
+    enter-from-class="opacity-0"
+    enter-to-class="opacity-100"
+    leave-active-class="transition ease-in duration-150"
+    leave-from-class="opacity-100"
+    leave-to-class="opacity-0"
+  >
+    <div 
+      v-if="reportToDelete" 
+      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      @click="reportToDelete = null"
+    >
+      <div 
+        :class="[
+          'rounded-xl shadow-2xl max-w-md w-full p-6',
+          darkMode ? 'bg-gray-800' : 'bg-white'
+        ]"
+        @click.stop
+      >
+        <div class="flex items-center gap-3 mb-4">
+          <div class="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+            <AlertTriangle :size="24" class="text-red-600 dark:text-red-400" />
+          </div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Delete Report</h3>
+        </div>
+        
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+          Are you sure you want to delete "<strong>{{ reportToDelete.title }}</strong>"? This action cannot be undone.
+        </p>
+        
+        <div class="flex gap-3">
+          <button
+            @click="reportToDelete = null"
+            class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            @click="deleteReport"
+            :disabled="deleting"
+            class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ deleting ? 'Deleting...' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Transition>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { BookOpen, FileText, Plus, Calendar, User, Moon, Sun } from 'lucide-vue-next'
+import { BookOpen, FileText, Plus, Calendar, User, Moon, Sun, Pencil, Trash2, AlertTriangle } from 'lucide-vue-next'
 import { useStrapi } from '../../composables/useStrapi'
 
 const { fetchReports } = useStrapi()
@@ -157,6 +224,8 @@ const loading = ref(true)
 const darkMode = ref(false)
 const showUserMenu = ref(false)
 const user = ref(null)
+const reportToDelete = ref(null)
+const deleting = ref(false)
 
 onMounted(async () => {
   // Load user info
@@ -199,6 +268,40 @@ const handleLogout = () => {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
     navigateTo('/login')
+  }
+}
+
+const editReport = (report) => {
+  navigateTo(`/reports/edit/${report.slug || report.documentId}`)
+}
+
+const confirmDelete = (report) => {
+  reportToDelete.value = report
+}
+
+const deleteReport = async () => {
+  if (!reportToDelete.value) return
+  
+  deleting.value = true
+  
+  try {
+    const token = localStorage.getItem('auth_token')
+    
+    await $fetch(`http://localhost:1337/api/reports/${reportToDelete.value.documentId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    
+    // Remove from local list
+    reports.value = reports.value.filter(r => r.documentId !== reportToDelete.value.documentId)
+    reportToDelete.value = null
+  } catch (error) {
+    console.error('Error deleting report:', error)
+    alert('Failed to delete report')
+  } finally {
+    deleting.value = false
   }
 }
 </script>
