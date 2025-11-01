@@ -41,9 +41,35 @@
         <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
           <Bell :size="20" />
         </button>
-        <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-          <User :size="20" />
-        </button>
+        <div class="relative">
+          <button 
+            @click="showUserMenu = !showUserMenu"
+            class="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          >
+            <User :size="20" />
+            <span v-if="user" class="text-sm hidden md:block">{{ user.username }}</span>
+          </button>
+          
+          <!-- User dropdown menu -->
+          <div 
+            v-if="showUserMenu" 
+            :class="[
+              'absolute right-0 mt-2 w-48 rounded-lg shadow-lg py-1 z-50',
+              darkMode ? 'bg-gray-800' : 'bg-white'
+            ]"
+          >
+            <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+              <p class="text-sm font-medium">{{ user?.username }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ user?.email }}</p>
+            </div>
+            <button
+              @click="handleLogout"
+              class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 dark:text-red-400"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -58,6 +84,7 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { BookOpen, Menu, X, FileText, Download, Moon, Sun, Bell, User } from 'lucide-vue-next'
 import { useReportStore } from '../stores/report'
 import { storeToRefs } from 'pinia'
@@ -65,7 +92,27 @@ import { storeToRefs } from 'pinia'
 const store = useReportStore()
 const { darkMode, sidebarOpen } = storeToRefs(store)
 
+const showUserMenu = ref(false)
+const user = ref(null)
+
+onMounted(() => {
+  if (process.client) {
+    const userData = localStorage.getItem('user')
+    if (userData) {
+      user.value = JSON.parse(userData)
+    }
+  }
+})
+
 const handleDownload = () => {
   alert('PDF download would be triggered here')
+}
+
+const handleLogout = () => {
+  if (process.client) {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user')
+    navigateTo('/login')
+  }
 }
 </script>
