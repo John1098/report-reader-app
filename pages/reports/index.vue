@@ -55,6 +55,28 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      <!-- Duplicating Overlay -->
+      <Transition
+        enter-active-class="transition ease-out duration-200"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition ease-in duration-150"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div v-if="duplicating" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div :class="[
+            'rounded-xl shadow-2xl p-6 text-center',
+            darkMode ? 'bg-gray-800' : 'bg-white'
+          ]">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-lg font-medium text-gray-900 dark:text-white">Duplicating report...</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">This may take a moment</p>
+          </div>
+        </div>
+      </Transition>
+
       <!-- Loading State -->
       <div v-if="loading" class="flex items-center justify-center py-12">
         <div class="text-center">
@@ -139,6 +161,13 @@
                 
                 <div class="flex items-center gap-2">
                   <button
+                    @click.stop="duplicateReport(report)"
+                    class="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                    title="Duplicate report"
+                  >
+                    <Copy :size="16" class="text-blue-600 dark:text-blue-400" />
+                  </button>
+                  <button
                     @click.stop="editReport(report)"
                     class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                     title="Edit report"
@@ -214,7 +243,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { BookOpen, FileText, Plus, Calendar, User, Moon, Sun, Pencil, Trash2, AlertTriangle } from 'lucide-vue-next'
+import { BookOpen, FileText, Plus, Calendar, User, Moon, Sun, Pencil, Trash2, AlertTriangle, Copy } from 'lucide-vue-next'
 import { useStrapi } from '../../composables/useStrapi'
 
 const { fetchReports } = useStrapi()
@@ -226,6 +255,7 @@ const showUserMenu = ref(false)
 const user = ref(null)
 const reportToDelete = ref(null)
 const deleting = ref(false)
+const duplicating = ref(false)
 
 onMounted(async () => {
   // Load user info
@@ -302,6 +332,144 @@ const deleteReport = async () => {
     alert('Failed to delete report')
   } finally {
     deleting.value = false
+  }
+}
+
+const duplicateReport = async (report) => {
+  if (duplicating.value) return
+  
+  duplicating.value = true
+  
+  try {
+    const token = localStorage.getItem('auth_token')
+    
+    // Get user's organization
+    const user = await $fetch('http://localhost:1337/api/users/me?populate[organization]=*', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    
+    if (!user.organization) {
+      alert('No organization found')
+      return
+    }
+    
+    // Fetch the full report with all nested data
+    const fullReport = await $fetch(
+      `http://localhost:1337/api/reports/${report.documentId}?populate[chapters][populate][sections][populate]=content_blocks`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    )
+    
+    const originalReport = fullReport.data
+    
+    // Create new report
+    const timestamp = Date.now()
+    const newReportResponse = await $fetch('http://localhost:1337/api/reports', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: {
+        data: {
+          title: `${originalReport.title} (Copy)`,
+          slug: `${originalReport.slug || 'report'}-copy-${timestamp}`,
+          publishedDate: new Date().toISOString().split('T')[0],
+          publicationStatus: 'published',
+          organization: user.organization.id
+        }
+      }
+    })
+    
+    const newReport = newReportResponse.data
+    
+    // Duplicate chapters
+    if (originalReport.chapters && originalReport.chapters.length > 0) {
+      for (const chapter of originalReport.chapters) {
+        const newChapterResponse = await $fetch('http://localhost:1337/api/chapters', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: {
+            data: {
+              title: chapter.title,
+              order: chapter.order,
+              icon: chapter.icon,
+              report: newReport.id
+            }
+          }
+        })
+        
+        const newChapter = newChapterResponse.data
+        
+        // Duplicate sections
+        if (chapter.sections && chapter.sections.length > 0) {
+          const sectionsArray = Array.isArray(chapter.sections) ? chapter.sections : [chapter.sections]
+          
+          for (const section of sectionsArray) {
+            const newSectionResponse = await $fetch('http://localhost:1337/api/sections', {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${token}`
+              },
+              body: {
+                data: {
+                  Title: section.Title,
+                  Order: section.Order,
+                  Content_Key: section.Content_Key,
+                  chapter: newChapter.id
+                }
+              }
+            })
+            
+            const newSection = newSectionResponse.data
+            
+            // Duplicate content blocks
+            if (section.content_blocks && section.content_blocks.length > 0) {
+              for (const block of section.content_blocks) {
+                await $fetch('http://localhost:1337/api/content-blocks', {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Bearer ${token}`
+                  },
+                  body: {
+                    data: {
+                      Type: block.Type,
+                      textContent: block.textContent,
+                      listItems: block.listItems,
+                      statsData: block.statsData,
+                      imageUrl: block.imageUrl,
+                      imageCaption: block.imageCaption,
+                      quoteText: block.quoteText,
+                      quoteAuthor: block.quoteAuthor,
+                      tableData: block.tableData,
+                      Order: block.Order,
+                      section: newSection.id
+                    }
+                  }
+                })
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Refresh the reports list
+    const updatedReports = await fetchReports()
+    reports.value = updatedReports || []
+    
+    alert('Report duplicated successfully!')
+  } catch (error) {
+    console.error('Error duplicating report:', error)
+    alert('Failed to duplicate report: ' + (error.data?.error?.message || error.message))
+  } finally {
+    duplicating.value = false
   }
 }
 </script>
