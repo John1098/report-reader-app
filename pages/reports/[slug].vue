@@ -11,12 +11,7 @@
       <p class="text-gray-600 dark:text-gray-400 mb-8">
         {{ error }}
       </p>
-      <button
-        @click="navigateTo('/reports')"
-        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-      >
-        Back to Reports
-      </button>
+      
     </div>
   </div>
   
@@ -32,15 +27,6 @@
         sidebarOpen ? 'ml-0 lg:ml-80' : 'ml-0'
       ]">
         <div class="max-w-4xl mx-auto px-6 py-8 w-full">
-          <!-- Back button -->
-          <button
-            @click="navigateTo('/reports')"
-            class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6"
-          >
-            <ArrowLeft :size="16" />
-            Back to Reports
-          </button>
-          
           <ReportContent />
         </div>
       </main>

@@ -177,7 +177,7 @@
                   <button
                     @click.stop="editReport(report)"
                     class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-                    title="Edit report"
+                    title="Edit report details"
                   >
                     <Pencil :size="16" class="text-gray-600 dark:text-gray-400" />
                   </button>

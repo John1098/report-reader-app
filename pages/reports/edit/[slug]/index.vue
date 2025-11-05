@@ -2,13 +2,7 @@
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
     <div class="max-w-2xl mx-auto">
       <div class="mb-8">
-        <button
-          @click="navigateTo('/reports')"
-          class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
-        >
-          <ArrowLeft :size="16" />
-          Back to Reports
-        </button>
+        
         
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           Edit Report

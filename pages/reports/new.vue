@@ -94,6 +94,12 @@ const handleCreate = async () => {
       return
     }
 
+    // Create slug from title
+    const slug = title.value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+
     // Create the report
     const response = await $fetch('http://localhost:1337/api/reports', {
       method: 'POST',
@@ -103,8 +109,9 @@ const handleCreate = async () => {
       body: {
         data: {
           title: title.value,
+          slug: slug,
           publishedDate: publishedDate.value,
-          publicationStatus: 'published',
+          publicationStatus: 'published', // Change to published so it's viewable
           organization: user.organization.id
         }
       }

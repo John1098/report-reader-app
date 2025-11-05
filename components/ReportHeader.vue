@@ -1,91 +1,137 @@
 <template>
   <header :class="[
-    'fixed top-0 left-0 right-0 z-50 border-b',
-    darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-  ]">
-    <div class="flex items-center justify-between px-6 py-4">
-      <div class="flex items-center gap-4">
-        <button
-          @click="store.toggleSidebar()"
-          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-        >
-          <component :is="sidebarOpen ? X : Menu" :size="20" />
-        </button>
-        <div class="flex items-center gap-3">
-          <BookOpen class="text-blue-600" :size="24" />
-          <span class="font-semibold text-lg">WorldInc</span>
-        </div>
+  'fixed top-0 left-0 right-0 z-50 border-b',
+  darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+]">
+  <div class="flex items-center justify-between px-6 py-4">
+    <!-- Left: Navigation + Report Title -->
+    <div class="flex items-center gap-4">
+      <button
+        @click="store.toggleSidebar()"
+        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+      >
+        <component :is="sidebarOpen ? X : Menu" :size="20" />
+      </button>
+      <div class="flex items-center gap-3">
+        <BookOpen class="text-blue-600" :size="24" />
+        <span class="font-semibold text-lg">{{ store.reportStructure?.title || 'Report' }}</span>
       </div>
-      
-      <div class="flex items-center gap-2">
+    </div>
+    
+    <!-- Center/Right: Report Actions + User Menu -->
+    <div class="flex items-center gap-6">
+      <!-- Report Actions Group -->
+      <div class="flex items-center gap-2 pr-6 border-r border-gray-300 dark:border-gray-600">
         <button
           @click="store.toggleTOC()"
           class="hidden md:flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm"
         >
           <FileText :size="16" />
-          <span>Table of Contents</span>
+          <span>Contents</span>
         </button>
         <button
           @click="handleDownload"
           class="hidden md:flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm"
         >
           <Download :size="16" />
-          <span>Download PDF</span>
+          <span>Download</span>
         </button>
         <button
           @click="store.toggleDarkMode()"
           class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          title="Toggle theme"
         >
           <component :is="darkMode ? Sun : Moon" :size="20" />
         </button>
-        <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-          <Bell :size="20" />
+      </div>
+      
+      <!-- User Menu -->
+      <div class="relative">
+        <button 
+          @click="showUserMenu = !showUserMenu"
+          class="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+        >
+          <User :size="20" />
+          <span v-if="user" class="text-sm hidden md:block">{{ user.username }}</span>
+          <ChevronDown :size="16" class="text-gray-400" />
         </button>
-        <div class="relative">
-          <button 
-            @click="showUserMenu = !showUserMenu"
-            class="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            <User :size="20" />
-            <span v-if="user" class="text-sm hidden md:block">{{ user.username }}</span>
-          </button>
+        
+        <!-- Dropdown Menu -->
+        <div 
+          v-if="showUserMenu" 
+          :class="[
+            'absolute right-0 mt-2 w-56 rounded-lg shadow-lg py-1 z-50',
+            darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+          ]"
+        >
+          <!-- User Info -->
+          <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <p class="text-sm font-medium">{{ user?.username }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ user?.email }}</p>
+          </div>
           
-          <!-- User dropdown menu -->
-          <div 
-            v-if="showUserMenu" 
-            :class="[
-              'absolute right-0 mt-2 w-48 rounded-lg shadow-lg py-1 z-50',
-              darkMode ? 'bg-gray-800' : 'bg-white'
-            ]"
-          >
-            <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-              <p class="text-sm font-medium">{{ user?.username }}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">{{ user?.email }}</p>
+          <!-- Navigation Links -->
+          <div class="py-1">
+            <button
+              @click="navigateTo('/reports')"
+              class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
+            >
+              <LayoutGrid :size="16" class="text-gray-500 dark:text-gray-400" />
+              Back to Reports
+            </button>
+            
+            <button
+              @click="editReport"
+              class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
+            >
+              <Edit :size="16" class="text-gray-500 dark:text-gray-400" />
+              Edit This Report
+            </button>
+          </div>
+          
+          <!-- Divider -->
+          <div class="border-t border-gray-200 dark:border-gray-700"></div>
+          
+          <!-- Coming Soon Section -->
+          <div class="py-1">
+            <div class="px-4 py-2 text-sm flex items-center gap-3 opacity-50 cursor-not-allowed">
+              <Bell :size="16" class="text-gray-500 dark:text-gray-400" />
+              Notifications
+              <span class="ml-auto text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">Soon</span>
             </div>
+          </div>
+          
+          <!-- Divider -->
+          <div class="border-t border-gray-200 dark:border-gray-700"></div>
+          
+          <!-- Logout -->
+          <div class="py-1">
             <button
               @click="handleLogout"
-              class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 dark:text-red-400"
+              class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 dark:text-red-400 flex items-center gap-3"
             >
+              <LogOut :size="16" />
               Logout
             </button>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Progress Bar -->
-    <div class="h-1 bg-gray-200 dark:bg-gray-700">
-      <div 
-        class="h-full bg-blue-600 transition-all duration-300"
-        :style="{ width: `${store.progressPercentage}%` }"
-      />
-    </div>
-  </header>
+  <!-- Progress Bar -->
+  <div class="h-1 bg-gray-200 dark:bg-gray-700">
+    <div 
+      class="h-full bg-blue-600 transition-all duration-300"
+      :style="{ width: `${store.progressPercentage}%` }"
+    />
+  </div>
+</header>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { BookOpen, Menu, X, FileText, Download, Moon, Sun, Bell, User } from 'lucide-vue-next'
+import { ref, onMounted, computed } from 'vue'
+import { BookOpen, Menu, X, FileText, Download, Moon, Sun, Bell, User, ChevronDown, LayoutGrid, Edit, LogOut } from 'lucide-vue-next'
 import { useReportStore } from '../stores/report'
 import { storeToRefs } from 'pinia'
 
@@ -94,6 +140,12 @@ const { darkMode, sidebarOpen } = storeToRefs(store)
 
 const showUserMenu = ref(false)
 const user = ref(null)
+
+// Get current report slug/documentId for edit link
+const currentReportSlug = computed(() => {
+  if (!store.strapiReport) return null
+  return store.strapiReport.slug || store.strapiReport.documentId
+})
 
 onMounted(() => {
   if (process.client) {
@@ -106,6 +158,13 @@ onMounted(() => {
 
 const handleDownload = () => {
   alert('PDF download would be triggered here')
+}
+
+const editReport = () => {
+  if (currentReportSlug.value) {
+    showUserMenu.value = false
+    navigateTo(`/reports/edit/${currentReportSlug.value}/content`)
+  }
 }
 
 const handleLogout = () => {
