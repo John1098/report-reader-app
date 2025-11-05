@@ -161,6 +161,13 @@
                 
                 <div class="flex items-center gap-2">
                   <button
+                    @click.stop="editContent(report)"
+                    class="p-1.5 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
+                    title="Edit content"
+                  >
+                    <Edit :size="16" class="text-green-600 dark:text-green-400" />
+                  </button>
+                  <button
                     @click.stop="duplicateReport(report)"
                     class="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
                     title="Duplicate report"
@@ -243,7 +250,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { BookOpen, FileText, Plus, Calendar, User, Moon, Sun, Pencil, Trash2, AlertTriangle, Copy } from 'lucide-vue-next'
+import { BookOpen, FileText, Plus, Calendar, User, Moon, Sun, Pencil, Trash2, AlertTriangle, Copy, Edit } from 'lucide-vue-next'
 import { useStrapi } from '../../composables/useStrapi'
 
 const { fetchReports } = useStrapi()
@@ -299,6 +306,10 @@ const handleLogout = () => {
     localStorage.removeItem('user')
     navigateTo('/login')
   }
+}
+
+const editContent = (report) => {
+  navigateTo(`/reports/edit/${report.slug || report.documentId}/content`)
 }
 
 const editReport = (report) => {
@@ -472,4 +483,6 @@ const duplicateReport = async (report) => {
     duplicating.value = false
   }
 }
+
+
 </script>
